@@ -19,7 +19,7 @@ use github.com/iwoloschin/elvish-packages/python
 ### Optional Helpers
 This module assumes all virtual environments are located under `~/.virtualenvs`, but this can easily be changed if needed.  Currently only one prefix is supported.
 ```elvish
-python:VIRTUAL_ENV_PREFIX = /path/to/virtual/environments
+python:virtual-env-prefix = /path/to/virtual/environments
 ```
 
 While it is completely possible to use the Python module without any extra work, it becomes unwieldy to type in `python:activate virtualenv` or `python:deactivate` every time you want to touch a virtual environment.  One solution is to use [zzamboni's alias module](https://github.com/zzamboni/elvish-modules/blob/master/alias.org) to define aliases that can then be called as just `activate` or `deactivate`.  If using aliases take care to also update the argument completer variable, otherwise Elvish will be unable to automatically complete virtual environment names.
