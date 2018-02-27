@@ -82,6 +82,7 @@ fn check {
         status[ahead] = '0'
         status[behind] = '0'
         status[commit-or-tag] = ''
+        status[dirty] = '0'
         status[name] = ''
         status[staged] = '0'
         status[untracked] = '0'
