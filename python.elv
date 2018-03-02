@@ -17,6 +17,8 @@
 virtual-env-prefix = $E:HOME/.virtualenvs
 
 fn activate [name]{
+    # TODO: Check if $name is a valid virtual environment
+
     E:VIRTUAL_ENV = $virtual-env-prefix/$name
     E:_OLD_VIRTUAL_PATH = $E:PATH
     E:PATH = $E:VIRTUAL_ENV/bin:$E:PATH
@@ -27,7 +29,7 @@ fn activate [name]{
     }
 }
 
-edit:arg-completer[python:activate] = [@args]{ e:ls $virtual-env-prefix}
+edit:completion:arg-completer[python:activate] = [@args]{ e:ls $virtual-env-prefix}
 
 fn deactivate {
     if (not-eq $E:_OLD_VIRTUAL_PATH "") {
