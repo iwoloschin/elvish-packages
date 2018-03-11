@@ -8,7 +8,7 @@ epm:install &silent-if-installed=$true github.com/iwoloschin/elvish-packages
 ```
 
 ## Python
-A set of simple functions to help Elvish work with Python Virtual Environments created by the standard [Virtualenv](https://virtualenv.pypa.io/en/stable/) tool. Instead of relying on shell scripts installed as part of the Virtual Environment this module utilizes Elvish functions to activate & deactivate Virtual Environments.  The activate function will only activate on Virtual Environments found in $python:virtualenv-directory`, if no Virtual Environment is found an error will be printed.
+A set of simple functions to help Elvish work with Python Virtual Environments created by the standard [Virtualenv](https://virtualenv.pypa.io/en/stable/) tool. Instead of relying on shell scripts installed as part of the Virtual Environment this module utilizes Elvish functions to activate & deactivate Virtual Environments.  The activate function will only activate on Virtual Environments found in `$python:virtualenv-directory`, if no Virtual Environment is found an error will be printed.
 
 ### How To Use
 In your `~/.elvish/rc.elv` file, put the following lines:
