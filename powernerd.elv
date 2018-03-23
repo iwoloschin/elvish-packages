@@ -19,7 +19,7 @@ default-user = ""
 timestamp-format = "%r"
 prompt-path-length = 3
 prompt-lines = [
-  [hostname path writeable git]
+  [session-helper hostname path writeable git]
   [time user virtualenv]
 ]
 rprompt-lines = []
@@ -40,6 +40,7 @@ nerd-glyphs = [
   &git-untracked= ''
   &git-staged= ''
   &git-dirty= ''
+  &session-helper= ''
 ]
 glyphs = $nerd-glyphs
 
@@ -68,6 +69,21 @@ segment-colors = [
 ### Private Theme Variables
 background = ""
 git-status = [&]
+
+session-helper-bg-color = (+ (% $pid 216) 16)
+session-helper-fg-color = 0
+
+### Private Theme Functions
+fn session-helper-color-picker {
+  if (>= (% (- $session-helper-bg-color 16) 36) 18) {
+    session-helper-fg-color = 232
+  } else {
+    session-helper-fg-color = 255
+  }
+}
+
+
+# Probably need a session-helper-hash function to select proper fg/bg colors
 
 fn build-segment [colors @chars]{
   if (not-eq $background '') {
@@ -119,6 +135,11 @@ fn generate-path {
 
 fn segment-path {
   build-segment $segment-colors[path] (generate-path)
+}
+
+### Session Helper Segments ###
+fn segment-session-helper {
+  build-segment [$session-helper-fg-color $session-helper-bg-color] $glyphs[session-helper]
 }
 
 ### Python Segments ###
@@ -202,6 +223,7 @@ fn end-prompt {
 }
 
 segments = [
+  &session-helper= $segment-session-helper~
   &path= $segment-path~
   &user= $segment-user~
   &hostname= $segment-hostname~
@@ -248,8 +270,9 @@ fn rprompt {
 }
 
 fn init {
-    edit:prompt = $prompt~
-    edit:rprompt = $rprompt~
+  session-helper-color-picker
+  edit:prompt = $prompt~
+  edit:rprompt = $rprompt~
 }
 
 init
