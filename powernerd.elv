@@ -16,7 +16,7 @@ use github.com/muesli/elvish-libs/git
 
 ### Default Settings ###
 default-user = ""
-timestamp-format = "%H:%M:%S %p"
+timestamp-format = "%r"
 prompt-path-length = 3
 prompt-lines = [
   [hostname path writeable git]
