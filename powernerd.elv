@@ -142,7 +142,10 @@ fn segment-git-commit {
   if (eq $git-status[is-git-repo] $true) {
     error = ?(commit-or-tag = (git describe --exact-match HEAD 2> /dev/null))
     if (not-eq $error $ok) {
-        commit-or-tag = (git rev-parse --short HEAD)
+        error = ?(commit-or-tag = (git rev-parse --short HEAD 2> /dev/null))
+        if (not-eq $error $ok) {
+          commit-or-tag = 'No Commits'
+        }
     }
     if (not-eq $commit-or-tag "") {
       build-segment $segment-colors[git-commit] $glyphs[git-commit] " " $commit-or-tag
