@@ -3,9 +3,10 @@
 # Copyright © 2018
 #   Ian Woloschin - ian@woloschin.com
 #
-# A tool to check if new versions of Elvish are available,
-# intended to be used in rc.elv to check when Elvish starts
-#
+# A tool to check if a newer version of Elvish is available.  Currently only
+# supports checking against HEAD.  Intended to be used in ~/.elvish/rc.elv as
+# a one time check when a new shell is started, but could be adapted to be
+# used as a prompt segment as well (but beware of Github's API limits).
 #
 # Install:
 #   epm:install github.com/iwoloschin/elvish-packages
@@ -16,6 +17,7 @@
 use re
 
 fn current-commit {
+  # Get the commit from the currently installed Elvish binary
   buildinfo = [(elvish -buildinfo)]
   for line $buildinfo {
     if (re:match "HEAD-([a-z0-9]{7})" $line) {
@@ -25,6 +27,7 @@ fn current-commit {
 }
 
 fn check-commit [commit]{
+  # Check if $commit is the latest commit to Elvish's master branch
   error = ?(
     response = (
       curl -s https://api.github.com/repos/elves/elvish/compare/$commit...master | from-json
@@ -35,4 +38,5 @@ fn check-commit [commit]{
   }
 }
 
+# Run the update check when module is 'used' in rc.elv
 check-commit (current-commit)
