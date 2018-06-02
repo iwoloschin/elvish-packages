@@ -21,9 +21,9 @@ update-message = 'Elvish Upgrade Available - update:build-HEAD'
 
 fn current-commit {
   # Get the commit from the currently installed Elvish binary
-  version = (elvish -buildinfo -json | from-json)[version]
-  version-find = (re:find '.*-(.{7})' $version)
-  put $version-find[groups][1][text]
+  put (
+    re:find "HEAD-([a-z0-9]{7})" (elvish -buildinfo -json | from-json)[version]
+  )[groups][1][text]
 }
 
 fn check-commit [commit]{
