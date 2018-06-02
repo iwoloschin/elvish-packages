@@ -16,14 +16,14 @@
 
 use re
 
+short-hash-length = 7
+update-message = 'Elvish Upgrade Available - update:build-HEAD'
+
 fn current-commit {
   # Get the commit from the currently installed Elvish binary
-  buildinfo = [(elvish -buildinfo)]
-  for line $buildinfo {
-    if (re:match "HEAD-([a-z0-9]{7})" $line) {
-      put (re:find "HEAD-([a-z0-9]{7})" $line)[groups][1][text]
-    }
-  }
+  version = (elvish -buildinfo -json | from-json)[version]
+  version-find = (re:find '.*-(.{7})' $version)
+  put $version-find[groups][1][text]
 }
 
 fn check-commit [commit]{
@@ -34,9 +34,63 @@ fn check-commit [commit]{
     )
   )
   if (and (eq $error $ok) (> $response[total_commits] 0)) {
-      echo 'Elvish Upgrade Available'
+      echo $update-message
+  }
+}
+
+fn deferred-check-commit [commit]{
+  curl -s https://api.github.com/repos/elves/elvish/compare/$commit...master > ~/.elvish/commit.json &
+}
+
+fn deferred-compare-commit {
+  error = ?(commit = (cat ~/.elvish/commit.json | from-json))
+  if (and (eq $error $ok) (> $commit[total_commits] 0)) {
+    echo $update-message
+  }
+}
+
+fn build-HEAD {
+  platform = (uname)
+
+  if (re:match $E:GOPATH (which elvish)) {
+    # Elvish is in $E:GOPATH indicating that it was installed via 'go get'
+    error = ?(
+      response = (
+        curl -s https://api.github.com/repos/elves/elvish/commits/master | from-json
+      )
+    )
+    if (not-eq $error $ok) {
+      echo "Unable to query Github for latest version"
+      return
+    }
+    hash = $response[sha]
+    short-hash = (re:find "^.{"$short-hash-length"}" $hash)[text]
+    error = ?(
+      go get \
+      -ldflags \
+        "-X github.com/elves/elvish/build.Version="$short-hash \
+      -u github.com/elves/elvish
+    )
+    if (not-eq $error $ok) {
+      echo "Error updating Elvish"
+    }
+  } else {
+    # Elvish is not in $E:GOPATH, try using native package managers to upgrade
+    if (eq $platform "Darwin") {
+      brew reinstall elvish
+    }
+  }
+}
+
+fn check-for-update {
+ error = ?(commit = (cat ~/.elvish/commit.json | from-json))
+ if (and (eq $error $ok) (> $commit[total_commits] 0)) {
+   echo $update-message
+  } elif (not-eq $error $ok) {
+    echo 'Error'
   }
 }
 
 # Run the update check when module is 'used' in rc.elv
-check-commit (current-commit)
+check-for-update
+deferred-check-commit (current-commit)
