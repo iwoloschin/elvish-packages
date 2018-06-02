@@ -18,12 +18,9 @@ use re
 
 fn current-commit {
   # Get the commit from the currently installed Elvish binary
-  buildinfo = [(elvish -buildinfo)]
-  for line $buildinfo {
-    if (re:match "HEAD-([a-z0-9]{7})" $line) {
-      put (re:find "HEAD-([a-z0-9]{7})" $line)[groups][1][text]
-    }
-  }
+  put (
+    re:find "HEAD-([a-z0-9]{7})" (elvish -buildinfo -json | from-json)[version]
+  )[groups][1][text]
 }
 
 fn check-commit [commit]{
@@ -34,7 +31,7 @@ fn check-commit [commit]{
     )
   )
   if (and (eq $error $ok) (> $response[total_commits] 0)) {
-      echo 'Elvish Upgrade Available'
+    echo 'Elvish Upgrade Available'
   }
 }
 
