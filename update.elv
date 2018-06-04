@@ -12,7 +12,18 @@
 #   epm:install github.com/iwoloschin/elvish-packages
 #
 # Use:
-#   use github.com/iwoloschin/elvish-packages/update
+#   Normal:
+#     use github.com/iwoloschin/elvish-packages/update
+#     update:check-commit
+#
+#   Async:
+#     use github.com/iwoloschin/elvish-packages/update
+#     notify-bg-job-success = $false
+#     update:async-check-commit
+#     # End of elv.rc
+#     notify-bg-job-success = $true
+#
+
 
 use re
 
@@ -26,7 +37,7 @@ fn current-commit {
   )[groups][1][text]
 }
 
-fn check-commit [commit]{
+fn check-commit [&commit=(current-commit)]{
   error = ?(
       compare = (curl -s -i https://api.github.com/repos/elves/elvish/compare/$commit...master | slurp)
   )
@@ -44,8 +55,8 @@ fn check-commit [commit]{
   }
 }
 
-fn async-check-commit [commit]{
-  check-commit (current-commit) &
+fn async-check-commit [&commit=(current-commit)]{
+  check-commit &commit=$commit &
 }
 
 fn build-HEAD {
@@ -85,6 +96,3 @@ fn build-HEAD {
     }
   }
 }
-
-# Run the update check when module is 'used' in rc.elv
-async-check-commit (current-commit)
