@@ -27,26 +27,25 @@ fn current-commit {
 }
 
 fn check-commit [commit]{
-  # Check if $commit is the latest commit to Elvish's master branch
   error = ?(
-    response = (
-      curl -s https://api.github.com/repos/elves/elvish/compare/$commit...master | from-json
-    )
+      compare = (curl -s -i https://api.github.com/repos/elves/elvish/compare/$commit...master | slurp)
   )
-  if (and (eq $error $ok) (> $response[total_commits] 0)) {
-      echo $update-message
+  if (not-eq $error $ok) {
+    echo (styled "Unable to reach github" red)
+    return
+  }
+
+  compare = [(re:split "\r\n\r\n" $compare)]
+  headers = $compare[0]
+  json = (echo $compare[1] | from-json)
+
+  if (> $json[total_commits] 0) {
+    echo (styled $update-message yellow)
   }
 }
 
-fn deferred-check-commit [commit]{
-  curl -s https://api.github.com/repos/elves/elvish/compare/$commit...master > ~/.elvish/commit.json &
-}
-
-fn deferred-compare-commit {
-  error = ?(commit = (cat ~/.elvish/commit.json | from-json))
-  if (and (eq $error $ok) (> $commit[total_commits] 0)) {
-    echo $update-message
-  }
+fn async-check-commit [commit]{
+  check-commit (current-commit) &
 }
 
 fn build-HEAD {
@@ -78,19 +77,14 @@ fn build-HEAD {
     # Elvish is not in $E:GOPATH, try using native package managers to upgrade
     if (eq $platform "Darwin") {
       brew reinstall elvish
+    } elif (eq $platform "Linux") {
+      if (eq ?(test -f /etc/gentoo-release) $ok) {
+        # Funtoo/Gentoo
+        sudo emerge elvish
+      }
     }
   }
 }
 
-fn check-for-update {
- error = ?(commit = (cat ~/.elvish/commit.json | from-json))
- if (and (eq $error $ok) (> $commit[total_commits] 0)) {
-   echo $update-message
-  } elif (not-eq $error $ok) {
-    echo 'Error'
-  }
-}
-
 # Run the update check when module is 'used' in rc.elv
-check-for-update
-deferred-check-commit (current-commit)
+async-check-commit (current-commit)
