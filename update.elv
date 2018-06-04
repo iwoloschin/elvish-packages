@@ -32,26 +32,25 @@ update-message = 'Elvish Upgrade Available - update:build-HEAD'
 
 fn current-commit {
   # Get the commit from the currently installed Elvish binary
-  put (
-    re:find "HEAD-([a-z0-9]{7})" (elvish -buildinfo -json | from-json)[version]
-  )[groups][1][text]
+  put (or (
+      re:find "HEAD-([a-z0-9]{7})" (elvish -buildinfo -json | from-json)[version]
+  )[groups][1][text] unknown)
 }
 
 fn check-commit [&commit=(current-commit)]{
-  error = ?(
-      compare = (curl -s -i https://api.github.com/repos/elves/elvish/compare/$commit...master | slurp)
-  )
-  if (not-eq $error $ok) {
-    echo (styled "Unable to reach github" red)
-    return
-  }
-
-  compare = [(re:split "\r\n\r\n" $compare)]
-  headers = $compare[0]
-  json = (echo $compare[1] | from-json)
-
-  if (> $json[total_commits] 0) {
-    echo (styled $update-message yellow)
+  if (eq $commit unknown) {
+    echo (styled "Your elvish does not report a version number in elvish -buildinfo" red)
+  } else {
+    error = ?(
+      json = (curl -s https://api.github.com/repos/elves/elvish/compare/$commit...master | from-json)
+    )
+    if (not-eq $error $ok) {
+      echo (styled "Unable to reach github: "(to-string $error) red)
+      return
+    }
+    if (and (has-key $json total_commits) (> $json[total_commits] 0)) {
+      echo (styled $update-message yellow)
+    }
   }
 }
 
@@ -78,7 +77,7 @@ fn build-HEAD {
     error = ?(
       go get \
       -ldflags \
-        "-X github.com/elves/elvish/build.Version="$short-hash \
+      "-X github.com/elves/elvish/build.Version="$short-hash \
       -u github.com/elves/elvish
     )
     if (not-eq $error $ok) {
