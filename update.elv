@@ -42,14 +42,17 @@ fn check-commit [&commit=(current-commit)]{
     echo (styled "Your elvish does not report a version number in elvish -buildinfo" red)
   } else {
     error = ?(
-      json = (curl -s https://api.github.com/repos/elves/elvish/compare/$commit...master | from-json)
+      compare = (curl -s -i https://api.github.com/repos/elves/elvish/compare/$commit...master | slurp)
     )
     if (not-eq $error $ok) {
       echo (styled "Unable to reach github: "(to-string $error) red)
-      return
-    }
-    if (and (has-key $json total_commits) (> $json[total_commits] 0)) {
-      echo (styled $update-message yellow)
+    } else {
+      compare = [(re:split "\r\n\r\n" $compare)]
+      headers = $compare[-2]
+      json = (echo $compare[-1] | from-json)
+      if (and (has-key $json total_commits) (> $json[total_commits] 0)) {
+        echo (styled $update-message yellow)
+      }
     }
   }
 }
