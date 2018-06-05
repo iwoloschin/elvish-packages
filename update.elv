@@ -44,7 +44,7 @@ fn last-modified {
   platform = (uname)
   if (eq $platform "Darwin") {
     put (date -u -j -r (stat -f%B (which elvish)) +"%a, %d %b %Y %H:%M:%S GMT")
-  } elif (eq $platform "Linux"){
+  } elif (eq $platform "Linux") {
     put (date -u -d (stat -c%y (which elvish)) +"%a, %d %b %Y %H:%M:%S GMT")
   }
 }
