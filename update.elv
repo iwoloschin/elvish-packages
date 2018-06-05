@@ -17,13 +17,16 @@
 #     update:check-commit
 #
 #   Async:
+#     # Beginning of rc.elv
 #     use github.com/iwoloschin/elvish-packages/update
 #     notify-bg-job-success = $false
 #     update:async-check-commit
 #     # End of elv.rc
+#     while (> $num-bg-jobs 0) {
+#       sleep 0.01
+#     }
 #     notify-bg-job-success = $true
 #
-
 
 use re
 
@@ -37,16 +40,31 @@ fn current-commit {
   )[groups][1][text] unknown)
 }
 
+fn last-modified {
+  platform = (uname)
+  if (eq $platform "Darwin") {
+    put (date -u -j -r (stat -f%B (which elvish)) +"%a, %d %b %Y %H:%M:%S GMT")
+  } elif (eq $platform "Linux"){
+    put (date -u -d (stat -c%y (which elvish)) +"%a, %d %b %Y %H:%M:%S GMT")
+  }
+}
+
 fn check-commit [&commit=(current-commit)]{
   if (eq $commit unknown) {
     echo (styled "Your elvish does not report a version number in elvish -buildinfo" red)
   } else {
     error = ?(
-      compare = (curl -s -i https://api.github.com/repos/elves/elvish/compare/$commit...master | slurp)
+      compare = (
+        curl -s -i -H "If-Modified-Since: "(last-modified) \
+        https://api.github.com/repos/elves/elvish/compare/$commit...master | slurp
+      )
     )
     if (not-eq $error $ok) {
       echo (styled "Unable to reach github: "(to-string $error) red)
     } else {
+      if (re:match "HTTP/1.1 304 Not Modified" $compare) {
+        return
+      }
       compare = [(re:split "\r\n\r\n" $compare)]
       headers = $compare[-2]
       json = (echo $compare[-1] | from-json)
