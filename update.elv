@@ -98,7 +98,7 @@ fn build-HEAD {
     error = ?(
       go get \
       -ldflags \
-      "-X github.com/elves/elvish/build.Version="$short-hash \
+      "-X github.com/elves/elvish/build.Version=HEAD-"$short-hash \
       -u github.com/elves/elvish
     )
     if (not-eq $error $ok) {
