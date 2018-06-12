@@ -49,13 +49,14 @@ fn last-modified {
   }
 }
 
-fn check-commit [&commit=(current-commit)]{
+fn check-commit [&commit=(current-commit) &verbose=$false]{
   if (eq $commit unknown) {
     echo (styled "Your elvish does not report a version number in elvish -buildinfo" red)
   } else {
     error = ?(
       compare = (
-        curl -s -i -H "If-Modified-Since: "(last-modified) \
+        curl -s -i --max-time 1 \
+        -H "If-Modified-Since: "(last-modified) \
         https://api.github.com/repos/elves/elvish/compare/$commit...master | slurp
       )
     )
@@ -69,14 +70,21 @@ fn check-commit [&commit=(current-commit)]{
       headers = $compare[-2]
       json = (echo $compare[-1] | from-json)
       if (and (has-key $json total_commits) (> $json[total_commits] 0)) {
-        echo (styled $update-message yellow)
+        if (eq $verbose $false) {
+          echo (styled $update-message yellow)
+        } elif (eq $verbose $true) {
+          echo (styled $update-message yellow)
+          for commit $json[commits] {
+            echo (styled $commit[commit][tree][sha][0:$short-hash-length] magenta)': '(styled $commit[commit][message] green)
+          }
+        }
       }
     }
   }
 }
 
-fn async-check-commit [&commit=(current-commit)]{
-  check-commit &commit=$commit &
+fn async-check-commit [&commit=(current-commit) &verbose=$false]{
+  check-commit &commit=$commit &verbose=$verbose &
 }
 
 fn build-HEAD {
