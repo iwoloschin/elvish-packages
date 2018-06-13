@@ -43,9 +43,9 @@ fn current-commit {
 fn last-modified {
   platform = (uname)
   if (eq $platform "Darwin") {
-    put (date -u -j -r (stat -f%B (which elvish)) +"%a, %d %b %Y %H:%M:%S GMT")
+    put (/bin/date -u -j -r (/usr/bin/stat -f%B (which elvish)) +"%a, %d %b %Y %H:%M:%S GMT")
   } elif (eq $platform "Linux") {
-    put (date -u -d (stat -c%y (which elvish)) +"%a, %d %b %Y %H:%M:%S GMT")
+    put (/bin/date -u -d (/usr/bin/stat -c%y (which elvish)) +"%a, %d %b %Y %H:%M:%S GMT")
   }
 }
 
@@ -61,7 +61,7 @@ fn check-commit [&commit=(current-commit) &verbose=$false]{
       )
     )
     if (not-eq $error $ok) {
-      echo (styled "Unable to reach github: "(to-string $error) red)
+      echo (styled "update:check_commit: Unable to reach github: "(to-string $error) red)
     } else {
       if (re:match "HTTP/1.1 304 Not Modified" $compare) {
         return
@@ -70,10 +70,8 @@ fn check-commit [&commit=(current-commit) &verbose=$false]{
       headers = $compare[-2]
       json = (echo $compare[-1] | from-json)
       if (and (has-key $json total_commits) (> $json[total_commits] 0)) {
-        if (eq $verbose $false) {
-          echo (styled $update-message yellow)
-        } elif (eq $verbose $true) {
-          echo (styled $update-message yellow)
+        echo (styled $update-message yellow)
+        if $verbose {
           for commit $json[commits] {
             echo (styled $commit[commit][tree][sha][0:$short-hash-length] magenta)': '(styled $commit[commit][message] green)
           }
