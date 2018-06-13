@@ -43,9 +43,9 @@ fn current-commit {
 fn last-modified {
   platform = (uname)
   if (eq $platform "Darwin") {
-    put (date -u -j -r (stat -f%B (which elvish)) +"%a, %d %b %Y %H:%M:%S GMT")
+    put (/bin/date -u -j -r (/usr/bin/stat -f%B (which elvish)) +"%a, %d %b %Y %H:%M:%S GMT")
   } elif (eq $platform "Linux") {
-    put (date -u -d (stat -c%y (which elvish)) +"%a, %d %b %Y %H:%M:%S GMT")
+    put (/bin/date -u -d (/usr/bin/stat -c%y (which elvish)) +"%a, %d %b %Y %H:%M:%S GMT")
   }
 }
 
