@@ -104,7 +104,7 @@ fn build-HEAD {
     error = ?(
       go get \
       -ldflags \
-      "-X github.com/elves/elvish/build.Version=HEAD-"$short-hash \
+      "-X github.com/elves/elvish/buildinfo.Version=HEAD-"$short-hash" -X github.com/elves/elvish/buildinfo.GoPath="(go env GOPATH)" -X github.com/elves/elvish/buildinfo.GoRoot="(go env GOROOT) \
       -u github.com/elves/elvish
     )
     if (not-eq $error $ok) {
