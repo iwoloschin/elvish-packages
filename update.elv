@@ -35,9 +35,7 @@ update-message = 'Elvish Upgrade Available - update:build-HEAD'
 
 fn current-commit {
   # Get the commit from the currently installed Elvish binary
-  put (or (
-      re:find "HEAD-([a-z0-9]{7})" (elvish -buildinfo -json | from-json)[version]
-  )[groups][1][text] unknown)
+  put (or (re:find ".*-.*-g(.*)" (elvish -buildinfo -json | from-json)[version])[groups][1][text] unknown)
 }
 
 fn last-modified {
@@ -91,20 +89,30 @@ fn build-HEAD {
   if (re:match $E:GOPATH (which elvish)) {
     # Elvish is in $E:GOPATH indicating that it was installed via 'go get'
     error = ?(
-      response = (
-        curl -s https://api.github.com/repos/elves/elvish/commits/master | from-json
+      tags = (curl -s https://api.github.com/repos/elves/elvish/tags | from-json)
+    )
+    if (not-eq $error $ok) {
+      echo (styled "Unable to query github for latest version" red)
+    }
+    tag = $tags[0][name]
+    commit = $tags[0][commit][sha]
+    # short-commit = (re:find "^.{"$short-hash-length"}" $commit)[text]
+    error = ?(
+      from-master = (
+        curl -s https://api.github.com/repos/elves/elvish/compare/$commit...master | from-json
       )
     )
     if (not-eq $error $ok) {
-      echo "Unable to query Github for latest version"
-      return
+      echo (styled "Unable to query github to determine number of commits since last tag" red)
     }
-    hash = $response[sha]
-    short-hash = (re:find "^.{"$short-hash-length"}" $hash)[text]
+    total-commits = $from-master[total_commits]
+    short-last-commit = (re:find "^.{"$short-hash-length"}" $from-master[commits][-1][sha])[text]
+    version = $tag"-"$from-master[total_commits]"-g"$short-last-commit
+
     error = ?(
       go get \
       -ldflags \
-      "-X github.com/elves/elvish/buildinfo.Version=HEAD-"$short-hash" -X github.com/elves/elvish/buildinfo.GoPath="(go env GOPATH)" -X github.com/elves/elvish/buildinfo.GoRoot="(go env GOROOT) \
+      "-X github.com/elves/elvish/buildinfo.Version="$version" -X github.com/elves/elvish/buildinfo.GoPath="(go env GOPATH)" -X github.com/elves/elvish/buildinfo.GoRoot="(go env GOROOT) \
       -u github.com/elves/elvish
     )
     if (not-eq $error $ok) {
