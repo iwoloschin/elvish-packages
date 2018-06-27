@@ -106,8 +106,12 @@ fn build-HEAD {
       echo (styled "Unable to query github to determine number of commits since last tag" red)
     }
     total-commits = $from-master[total_commits]
-    short-last-commit = (re:find "^.{"$short-hash-length"}" $from-master[commits][-1][sha])[text]
-    version = $tag"-"$from-master[total_commits]"-g"$short-last-commit
+    commit-version = ""
+    if (> $total-commits 0) {
+      short-last-commit = (re:find "^.{"$short-hash-length"}" $from-master[commits][-1][sha])[text]
+      commit-version = "-"$from-master[total_commits]"-g"$short-last-commit
+    }
+    version = $tag$commit-version
 
     error = ?(
       go get \
