@@ -33,9 +33,14 @@ use re
 short-hash-length = 7
 update-message = 'Elvish Upgrade Available - update:build-HEAD'
 
-fn current-commit {
-  # Get the commit from the currently installed Elvish binary
-  put (or (re:find ".*-.*-g(.*)" (elvish -buildinfo -json | from-json)[version])[groups][1][text] unknown)
+fn current-commit-or-tag {
+  # Get the tag and commit from the currently installed Elvish binary
+  tag commit = (re:find '^(.*?)(?:-\d+-g(.*))?$' (elvish -buildinfo -json | from-json)[version])[groups][1 2][text]
+  if (not-eq $commit '') {
+    put $commit
+  } else {
+    put $tag
+  }
 }
 
 fn last-modified {
@@ -47,7 +52,7 @@ fn last-modified {
   }
 }
 
-fn check-commit [&commit=(current-commit) &verbose=$false]{
+fn check-commit [&commit=(current-commit-or-tag) &verbose=$false]{
   if (eq $commit unknown) {
     echo (styled "Your elvish does not report a version number in elvish -buildinfo" red)
   } else {
@@ -79,7 +84,7 @@ fn check-commit [&commit=(current-commit) &verbose=$false]{
   }
 }
 
-fn async-check-commit [&commit=(current-commit) &verbose=$false]{
+fn async-check-commit [&commit=(current-commit-or-tag) &verbose=$false]{
   check-commit &commit=$commit &verbose=$verbose &
 }
 
