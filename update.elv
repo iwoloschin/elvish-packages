@@ -88,7 +88,7 @@ fn async-check-commit [&commit=(current-commit-or-tag) &verbose=$false]{
   check-commit &commit=$commit &verbose=$verbose &
 }
 
-fn build-HEAD {
+fn build-HEAD [&silent=$false]{
   platform = (uname)
 
   if (re:match $E:GOPATH (which elvish)) {
@@ -118,14 +118,21 @@ fn build-HEAD {
     }
     version = $tag$commit-version
 
-    error = ?(
+    if (not $silent) {
+      echo (styled "Building and installing Elvish "$version" using go get" yellow)
+    }
+    build_ok = ?(
       go get \
       -ldflags \
       "-X github.com/elves/elvish/buildinfo.Version="$version" -X github.com/elves/elvish/buildinfo.GoPath="(go env GOPATH)" -X github.com/elves/elvish/buildinfo.GoRoot="(go env GOROOT) \
       -u github.com/elves/elvish
     )
-    if (not-eq $error $ok) {
-      echo "Error updating Elvish"
+    if $build_ok {
+      if (not $silent) {
+        echo (styled "Installed Elvish "(joins "\n" [(elvish -buildinfo)]) green)
+      }
+    } else {
+      echo (styled "Error updating Elvish: "(to-string $build_ok) red)
     }
   } else {
     # Elvish is not in $E:GOPATH, try using native package managers to upgrade
