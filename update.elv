@@ -76,7 +76,7 @@ fn check-commit [&commit=(current-commit-or-tag) &verbose=$false]{
         echo (styled $update-message yellow)
         if $verbose {
           for commit $json[commits] {
-            echo (styled $commit[commit][tree][sha][0:$short-hash-length] magenta)': '(styled $commit[commit][message] green)
+            echo (styled $commit[sha][0:$short-hash-length] magenta)': '(styled $commit[commit][message] green)
           }
         }
       }
