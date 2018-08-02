@@ -32,6 +32,7 @@ use re
 
 short-hash-length = 7
 update-message = 'Elvish Upgrade Available - update:build-HEAD'
+curl-timeout = 1
 
 fn current-commit-or-tag {
   # Get the tag and commit from the currently installed Elvish binary
@@ -58,7 +59,7 @@ fn check-commit [&commit=(current-commit-or-tag) &verbose=$false]{
   } else {
     error = ?(
       compare = (
-        curl -s -i --max-time 1 \
+        curl -s -i --max-time $curl-timeout \
         -H "If-Modified-Since: "(last-modified) \
         https://api.github.com/repos/elves/elvish/compare/$commit...master | slurp
       )
