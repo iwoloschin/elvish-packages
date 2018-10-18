@@ -16,11 +16,12 @@ use github.com/muesli/elvish-libs/git
 
 ### Default Settings ###
 default-user = ""
+force-hostname = $false
 timestamp-format = "%r"
 prompt-path-length = 3
 prompt-lines = [
   [session-helper hostname path writeable git]
-  [time user virtualenv]
+  [time user virtualenv background-jobs]
 ]
 rprompt-lines = []
 
@@ -31,8 +32,9 @@ nerd-glyphs = [
   &virtualenv= ''
   &user-prompt= ''
   &root-prompt= ''
-  &time= ''
+  &time= ''
   &unwriteable= ''
+  &background-jobs= ''
   &git-ahead= ''
   &git-behind= ''
   &git-commit= ''
@@ -55,6 +57,7 @@ segment-colors = [
   &user= [231 239]
   &time= [232 220]
   &unwriteable= [16 196]
+  &background-jobs= [214 17]
   &end-prompt-user= [231 36]
   &end-prompt-root= [231 196]
   &git-ahead= [231 52]
@@ -69,7 +72,6 @@ segment-colors = [
 ### Private Theme Variables
 background = ""
 git-status = [&]
-
 session-helper-bg-color = (+ (% $pid 216) 16)
 session-helper-fg-color = 0
 
@@ -82,18 +84,17 @@ fn session-helper-color-picker {
   }
 }
 
-
-# Probably need a session-helper-hash function to select proper fg/bg colors
-
 fn build-segment [colors @chars]{
   if (not-eq $background '') {
     edit:styled $glyphs[separator] "38;5;"$background";48;5;"$colors[1]
+    # styled (styled-segment $glyphs[separator] &bg-color=$background &fg-color=$colors[1])
   }
   edit:styled " "(joins '' $chars)" " "38;5;"$colors[0]";48;5;"$colors[1]
+  # styled (styled-segment " "(joins '' $chars)" " &bg-color=$colors[0] &fg-color=$colors[1])
   background = $colors[1]
 }
 
-### User, Hostname & Time Segments ###
+### System Segments ###
 
 fn segment-user {
   if (not-eq $default-user (e:whoami)) {
@@ -102,18 +103,24 @@ fn segment-user {
 }
 
 fn segment-hostname {
-  if (not-eq $E:SSH_CLIENT '') {
+  if (or $force-hostname (not-eq $E:SSH_CLIENT '')) {
     build-segment $segment-colors[hostname] (e:hostname)
   }
 }
 
 fn segment-time {
-  build-segment $segment-colors[time] $glyphs[time] (date +$timestamp-format)
+  build-segment $segment-colors[time] $glyphs[time] ' ' (date +$timestamp-format)
 }
 
 fn segment-writeable {
   if (not-eq ?(test -w $pwd) $ok) {
     build-segment $segment-colors[unwriteable] $glyphs[unwriteable]
+  }
+}
+
+fn segment-background-jobs {
+  if (> $num-bg-jobs 0) {
+    build-segment $segment-colors[background-jobs] $glyphs[background-jobs] ' ' $num-bg-jobs
   }
 }
 
@@ -228,6 +235,7 @@ segments = [
   &user= $segment-user~
   &hostname= $segment-hostname~
   &writeable= $segment-writeable~
+  &background-jobs= $segment-background-jobs~
   &virtualenv= $segment-virtualenv~
   &time= $segment-time~
   &git= $segment-git~
