@@ -73,11 +73,11 @@ fn check-commit [&commit=(current-commit-or-tag) &verbose=$false]{
       compare = [(re:split "\r\n\r\n" $compare)]
       headers = $compare[-2]
       json = (echo $compare[-1] | from-json)
-      total_commits = 0
+      total-commits = 0
       if (and (has-key $json total_commits)) {
-        total_commits = $json[total_commits]
+        total-commits = $json[total_commits]
       }
-      if (> $total_commits 0) {
+      if (> $total-commits 0) {
         echo (styled $update-message yellow)
         if $verbose {
           for commit $json[commits] {
