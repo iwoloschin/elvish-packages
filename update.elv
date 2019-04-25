@@ -73,7 +73,11 @@ fn check-commit [&commit=(current-commit-or-tag) &verbose=$false]{
       compare = [(re:split "\r\n\r\n" $compare)]
       headers = $compare[-2]
       json = (echo $compare[-1] | from-json)
-      if (and (has-key $json total_commits) (> $json[total_commits] 0)) {
+      total-commits = 0
+      if (and (has-key $json total_commits)) {
+        total-commits = $json[total_commits]
+      }
+      if (> $total-commits 0) {
         echo (styled $update-message yellow)
         if $verbose {
           for commit $json[commits] {
@@ -111,11 +115,14 @@ fn build-HEAD [&silent=$false]{
     if (not-eq $error $ok) {
       echo (styled "Unable to query github to determine number of commits since last tag" red)
     }
-    total-commits = $from-master[total_commits]
+    total-commits = 0
+    if (and (has-key $from-master total_commits)) {
+      total-commits = $from-master[total_commits]
+    }
     commit-version = ""
     if (> $total-commits 0) {
       short-last-commit = (re:find "^.{"$short-hash-length"}" $from-master[commits][-1][sha])[text]
-      commit-version = "-"$from-master[total_commits]"-g"$short-last-commit
+      commit-version = "-"$total-commits"-g"$short-last-commit
     }
     version = $tag$commit-version
 
