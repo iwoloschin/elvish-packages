@@ -205,7 +205,7 @@ fn segment-git-untracked {
 fn segment-git-staged {
   staged-count = (+ $git-status[staged-modified-count staged-deleted-count staged-added-count renamed-count copied-count])
   if (> $staged-count 0) {
-    build-segment $segment-colors[git-staged] $staged-count " " $glyphs[git-staged]
+    build-segment $segment-colors[git-staged] ""$staged-count " " $glyphs[git-staged]
   }
 }
 
