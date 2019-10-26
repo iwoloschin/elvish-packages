@@ -106,7 +106,6 @@ fn build-HEAD [&silent=$false]{
     }
     tag = $tags[0][name]
     commit = $tags[0][commit][sha]
-    # short-commit = (re:find "^.{"$short-hash-length"}" $commit)[text]
     error = ?(
       from-master = (
         curl -s https://api.github.com/repos/elves/elvish/compare/$commit...master | from-json
@@ -131,8 +130,8 @@ fn build-HEAD [&silent=$false]{
     }
     build_ok = ?(
       go get \
-      -ldflags \
-      "-X github.com/elves/elvish/buildinfo.Version="$version" -X github.com/elves/elvish/buildinfo.GoPath="(go env GOPATH)" -X github.com/elves/elvish/buildinfo.GoRoot="(go env GOROOT) \
+      -trimpath \
+      -ldflags "-X github.com/elves/elvish/buildinfo.Version="$version \
       -u github.com/elves/elvish
     )
     if $build_ok {
