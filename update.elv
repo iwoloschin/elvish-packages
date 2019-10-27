@@ -131,7 +131,7 @@ fn build-HEAD [&silent=$false]{
     build_ok = ?(
       go get \
       -trimpath \
-      -ldflags "-X github.com/elves/elvish/buildinfo.Version="$version \
+      -ldflags "-X github.com/elves/elvish/buildinfo.Version="$version" -X github.com/elves/elvish/buildinfo.Reproducible=true" \
       -u github.com/elves/elvish
     )
     if $build_ok {
