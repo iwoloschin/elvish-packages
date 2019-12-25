@@ -1,6 +1,6 @@
 # Powernerd Elvish Theme
 #
-# Copyright © 2018
+# Copyright © 2019
 #   Ian Woloschin - ian@woloschin.com
 #
 # A Powerline-inspired theme with Nerd Fonts
@@ -51,22 +51,22 @@ glyphs = $nerd-glyphs
 # Format:
 #   &segment-name= [$Text-Color $Background-Color]
 segment-colors = [
-  &path= [231 92]
-  &hostname= [232 51]
-  &virtualenv= [226 21]
-  &user= [231 239]
-  &time= [232 220]
-  &unwriteable= [16 196]
-  &background-jobs= [214 17]
-  &end-prompt-user= [231 36]
-  &end-prompt-root= [231 196]
-  &git-ahead= [231 52]
-  &git-behind= [231 52]
-  &git-commit= [16 226]
-  &git-dirty= [231 160]
-  &git-name= [16 81]
-  &git-staged= [231 28]
-  &git-untracked= [231 196]
+  &path= ['color231' 'color92']
+  &hostname= ['color232' 'color51']
+  &virtualenv= ['color226' 'color21']
+  &user= ['color231' 'color239']
+  &time= ['color232' 'color220']
+  &unwriteable= ['color16' 'color196']
+  &background-jobs= ['color214' 'color17']
+  &end-prompt-user= ['color231' 'color36']
+  &end-prompt-root= ['color231' 'color196']
+  &git-ahead= ['color231' 'color52']
+  &git-behind= ['color231' 'color52']
+  &git-commit= ['color16' 'color226']
+  &git-dirty= ['color231' 'color160']
+  &git-name= ['color16' 'color81']
+  &git-staged= ['color231' 'color28']
+  &git-untracked= ['color231' 'color196']
 ]
 
 ### Private Theme Variables
@@ -78,19 +78,17 @@ session-helper-fg-color = 0
 ### Private Theme Functions
 fn session-helper-color-picker {
   if (>= (% (- $session-helper-bg-color 16) 36) 18) {
-    session-helper-fg-color = 232
+    session-helper-fg-color = 'color232'
   } else {
-    session-helper-fg-color = 255
+    session-helper-fg-color = 'color255'
   }
 }
 
 fn build-segment [colors @chars]{
   if (not-eq $background '') {
-    edit:styled $glyphs[separator] "38;5;"$background";48;5;"$colors[1]
-    # styled (styled-segment $glyphs[separator] &bg-color=$background &fg-color=$colors[1])
+    styled $glyphs[separator] $background bg-$colors[1]
   }
-  edit:styled " "(joins '' $chars)" " "38;5;"$colors[0]";48;5;"$colors[1]
-  # styled (styled-segment " "(joins '' $chars)" " &bg-color=$colors[0] &fg-color=$colors[1])
+  styled " "(joins '' $chars)" " $colors[0] bg-$colors[1]
   background = $colors[1]
 }
 
@@ -146,7 +144,7 @@ fn segment-path {
 
 ### Session Helper Segments ###
 fn segment-session-helper {
-  build-segment [$session-helper-fg-color $session-helper-bg-color] $glyphs[session-helper]
+  build-segment [$session-helper-fg-color color$session-helper-bg-color] $glyphs[session-helper]
 }
 
 ### Python Segments ###
@@ -226,7 +224,7 @@ fn end-prompt {
   } else {
     build-segment $segment-colors[end-prompt-root] $glyphs[root-prompt]
   }
-  edit:styled $glyphs[separator] "38;5;"$background";48;5;0"
+  styled $glyphs[separator] $background
 }
 
 segments = [
@@ -255,7 +253,7 @@ fn build-prompt [lines]{
     if (bool $first-line) {
       first-line = $false
     } else {
-      edit:styled $glyphs[separator] "38;5;"$background";48;5;0"
+      styled $glyphs[separator] $background
       put "\n"
     }
 
