@@ -1,6 +1,6 @@
 # Elvish Update Checker
 #
-# Copyright © 2018
+# Copyright © 2020
 #   Ian Woloschin - ian@woloschin.com
 #
 # A tool to check if a newer version of Elvish is available.  Currently only
@@ -29,6 +29,7 @@
 #
 
 use re
+use str
 
 short-hash-length = 7
 update-message = 'Elvish Upgrade Available - update:build-HEAD'
@@ -136,7 +137,7 @@ fn build-HEAD [&silent=$false]{
     )
     if $build_ok {
       if (not $silent) {
-        echo (styled "Installed Elvish "(joins "\n" [(elvish -buildinfo)]) green)
+        echo (styled "Installed Elvish "(str:join "\n" [(elvish -buildinfo)]) green)
       }
     } else {
       echo (styled "Error updating Elvish: "(to-string $build_ok) red)
