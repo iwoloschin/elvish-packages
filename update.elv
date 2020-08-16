@@ -59,8 +59,8 @@ fn check-commit [&commit=(current-commit-or-tag) &verbose=$false]{
   } else {
     error = ?(
       compare = (
-        curl -s -i --max-time $curl-timeout \
-        -H "If-Modified-Since: "(last-modified) \
+        curl -s -i --max-time $curl-timeout ^
+        -H "If-Modified-Since: "(last-modified) ^
         https://api.github.com/repos/elves/elvish/compare/$commit...master | slurp
       )
     )
@@ -129,9 +129,9 @@ fn build-HEAD [&silent=$false]{
       echo (styled "Building and installing Elvish "$version" using go get" yellow)
     }
     build_ok = ?(
-      go get \
-      -trimpath \
-      -ldflags "-X github.com/elves/elvish/pkg/buildinfo.Version="$version" -X github.com/elves/elvish/pkg/buildinfo.Reproducible=true" \
+      go get -u ^
+      -trimpath ^
+      -ldflags "-X github.com/elves/elvish/pkg/buildinfo.Version="$version" -X github.com/elves/elvish/pkg/buildinfo.Reproducible=true" ^
       github.com/elves/elvish
     )
     if $build_ok {
