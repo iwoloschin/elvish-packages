@@ -12,6 +12,7 @@
 #   use github.com/iwoloschin/elvish-packages/powernerd
 
 use re
+use str
 use github.com/muesli/elvish-libs/git
 
 ### Default Settings ###
@@ -88,7 +89,7 @@ fn build-segment [colors @chars]{
   if (not-eq $background '') {
     styled $glyphs[separator] $background bg-$colors[1]
   }
-  styled " "(joins '' $chars)" " $colors[0] bg-$colors[1]
+  styled " "(str:join '' $chars)" " $colors[0] bg-$colors[1]
   background = $colors[1]
 }
 
@@ -127,7 +128,7 @@ fn segment-background-jobs {
 fn generate-path {
   path = (re:replace '~' $glyphs[home] (tilde-abbr $pwd))
   path = (re:replace '(\.?[^/'$glyphs[home]']{'$prompt-path-length'})[^/]*/' '$1/' $path)
-  directories = [(splits / $path)]
+  directories = [(str:split / $path)]
   if (eq $directories[0] '') {
     directories = $directories[1:]
   }
