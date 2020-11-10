@@ -61,5 +61,5 @@ fn deactivate {
 }
 
 fn list-virtualenvs {
-  explode [(ls $virtualenv-directory)]
+  all [(ls $virtualenv-directory)]
 }
