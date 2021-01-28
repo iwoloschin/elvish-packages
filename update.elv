@@ -1,6 +1,6 @@
 # Elvish Update Checker
 #
-# Copyright © 2020
+# Copyright © 2021
 #   Ian Woloschin - ian@woloschin.com
 #
 # A tool to check if a newer version of Elvish is available.  Currently only
@@ -132,8 +132,8 @@ fn build-HEAD [&silent=$false]{
     build_ok = ?(
       go get -u ^
       -trimpath ^
-      -ldflags "-X github.com/elves/elvish/pkg/buildinfo.Version="$version" -X github.com/elves/elvish/pkg/buildinfo.Reproducible=true" ^
-      github.com/elves/elvish
+      -ldflags "-X src.elv.sh/pkg/buildinfo.Version="$version" -X src.elv.sh/pkg/buildinfo.Reproducible=true" ^
+      src.elv.sh/cmd/elvish
     )
     if $build_ok {
       if (not $silent) {
