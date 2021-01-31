@@ -61,6 +61,7 @@ fn check-commit [&commit=(current-commit-or-tag) &verbose=$false]{
     error = ?(
       compare = (
         curl -s -i --max-time $curl-timeout ^
+        -H "Accept: application/vnd.github.v3+json" ^
         -H "If-Modified-Since: "(last-modified) ^
         https://api.github.com/repos/elves/elvish/compare/$commit...master | slurp
       )
@@ -68,12 +69,11 @@ fn check-commit [&commit=(current-commit-or-tag) &verbose=$false]{
     if (not-eq $error $ok) {
       echo (styled "update:check_commit: Unable to reach github: "(to-string $error) red)
     } else {
-      if (re:match "HTTP/1.1 304 Not Modified" $compare) {
+      if (re:match "^HTTP/(2|1.1) 304" $compare) {
         return
       }
-      compare = [(re:split "\r\n\r\n" $compare)]
-      headers = $compare[-2]
-      json = (echo $compare[-1] | from-json)
+      headers raw-json = (re:split "\r\n\r\n" $compare)
+      json = (echo $raw-json | from-json)
       total-commits = 0
       if (and (has-key $json total_commits)) {
         total-commits = $json[total_commits]
@@ -124,15 +124,15 @@ fn build-HEAD [&silent=$false]{
       short-last-commit = (re:find "^.{"$short-hash-length"}" $from-master[commits][-1][sha])[text]
       commit-version = "-"$total-commits"-g"$short-last-commit
     }
-    version = $tag$commit-version
+    version = $commit-version
 
     if (not $silent) {
       echo (styled "Building and installing Elvish "$version" using go get" yellow)
     }
     build_ok = ?(
-      go get -u ^
+      go get -u -buildmode=pie -trimpath^
       -trimpath ^
-      -ldflags "-X src.elv.sh/pkg/buildinfo.Version="$version" -X src.elv.sh/pkg/buildinfo.Reproducible=true" ^
+      -ldflags "-X src.elv.sh/pkg/buildinfo.VersionSuffix="$version" -X src.elv.sh/pkg/buildinfo.Reproducible=true" ^
       src.elv.sh/cmd/elvish
     )
     if $build_ok {
