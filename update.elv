@@ -60,7 +60,7 @@ fn check-commit [&commit=(current-commit-or-tag) &verbose=$false]{
   } else {
     error = ?(
       compare = (
-        curl -s -i --max-time $curl-timeout ^
+        curl -s -i --max-time $curl-timeout --suppress-connect-headers ^
         -H "Accept: application/vnd.github.v3+json" ^
         -H "If-Modified-Since: "(last-modified) ^
         https://api.github.com/repos/elves/elvish/compare/$commit...master | slurp
@@ -95,62 +95,45 @@ fn async-check-commit [&commit=(current-commit-or-tag) &verbose=$false]{
 }
 
 fn build-HEAD [&silent=$false]{
-  platform = (uname)
-
   if (re:match $E:GOPATH (which elvish)) {
-    # Elvish is in $E:GOPATH indicating that it was installed via 'go get'
-    error = ?(
-      tags = (curl -s https://api.github.com/repos/elves/elvish/tags | from-json)
-    )
-    if (not-eq $error $ok) {
-      echo (styled "Unable to query github for latest version" red)
-    }
-    tag = $tags[0][name]
-    commit = $tags[0][commit][sha]
-    error = ?(
-      from-master = (
+    set commit = current-commit-or-tag
+    set error = ?(
+      set from-master = (
         curl -s https://api.github.com/repos/elves/elvish/compare/$commit...master | from-json
       )
     )
     if (not-eq $error $ok) {
       echo (styled "Unable to query github to determine number of commits since last tag" red)
     }
-    total-commits = 0
+    set total-commits = (float64 0)
     if (and (has-key $from-master total_commits)) {
       total-commits = $from-master[total_commits]
     }
-    commit-version = ""
-    if (> $total-commits 0) {
-      short-last-commit = (re:find "^.{"$short-hash-length"}" $from-master[commits][-1][sha])[text]
-      commit-version = "-"$total-commits"-g"$short-last-commit
+    set commit-version = ""
+    if (eq $total-commits (float64 0)) {
+      if (not $silent) {
+        echo (styled "No changes, not rebuilding" yellow)
+      }
+      return
     }
-    version = $commit-version
+
+    set new-commit = $from-master[commits][-1][sha]
 
     if (not $silent) {
-      echo (styled "Building and installing Elvish "$version" using go get" yellow)
+      echo (styled "Building and installing Elvish "$new-commit" using go get" yellow)
     }
-    build_ok = ?(
-      go get -u -buildmode=pie -trimpath^
-      -trimpath ^
-      -ldflags "-X src.elv.sh/pkg/buildinfo.VersionSuffix="$version" -X src.elv.sh/pkg/buildinfo.Reproducible=true" ^
-      src.elv.sh/cmd/elvish
+    build-ok = ?(
+      make -C $E:GOPATH"/src/src.elv.sh" get
     )
-    if $build_ok {
+    if $build-ok {
       if (not $silent) {
         echo (styled "Installed Elvish "(str:join "\n" [(elvish -buildinfo)]) green)
       }
     } else {
-      echo (styled "Error updating Elvish: "(to-string $build_ok) red)
+      echo (styled "Error updating Elvish: "(to-string $build-ok) red)
     }
   } else {
-    # Elvish is not in $E:GOPATH, try using native package managers to upgrade
-    if (eq $platform "Darwin") {
-      brew reinstall elvish
-    } elif (eq $platform "Linux") {
-      if (eq ?(test -f /etc/gentoo-release) $ok) {
-        # Funtoo/Gentoo
-        sudo emerge elvish
-      }
-    }
+    # Elvish is not in $E:GOPATH, use native package manager
+    echo (styled "Elvish is not installed via go get, not rebuilding" red)
   }
 }
