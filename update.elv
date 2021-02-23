@@ -37,7 +37,7 @@ curl-timeout = 1
 
 fn current-commit-or-tag {
   # Get the tag and commit from the currently installed Elvish binary
-  tag commit = (re:find '^(.*?)(?:-\d+-g(.*))?$' (elvish -buildinfo -json | from-json)[version])[groups][1 2][text]
+  tag commit = (re:find '^(.[^-]*?)(?:-dev\.(.*))?$' (elvish -buildinfo -json | from-json)[version])[groups][1 2][text]
   if (not-eq $commit '') {
     put $commit
   } else {
