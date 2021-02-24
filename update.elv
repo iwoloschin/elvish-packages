@@ -94,8 +94,9 @@ fn async-check-commit [&commit=(current-commit-or-tag) &verbose=$false]{
   check-commit &commit=$commit &verbose=$verbose &
 }
 
-fn build-HEAD [&silent=$false]{
-  if (re:match $E:GOPATH (which elvish)) {
+fn build-HEAD [&silent=$false &force=$false]{
+  var gopath = (go env GOPATH)
+  if (re:match $gopath (which elvish)) {
     var commit = (current-commit-or-tag)
     var error = ?(
       var from-master = (
@@ -106,21 +107,21 @@ fn build-HEAD [&silent=$false]{
       echo (styled "Unable to query github to determine number of commits since last tag" red)
     }
 
-    if (== $from-master[total_commits] (float64 0)) {
+    if (and (not $force) (not-eq $commit unknown) (== $from-master[total_commits] (float64 0))) {
       if (not $silent) {
         echo (styled "No changes, not rebuilding" yellow)
       }
       return
     }
 
-    var new-commit = $from-master[commits][-1][sha]
+    var new-commit = (or (set _ = ?($from-master[commits][-1][sha])) "master")
 
     if (not $silent) {
       echo (styled "Building and installing Elvish "$new-commit" using go get" yellow)
     }
     var build-ok = ?(
-      git -C $E:GOPATH"/src/src.elv.sh" pull; ^
-      make -C $E:GOPATH"/src/src.elv.sh" get
+      git -C $gopath"/src/src.elv.sh" pull; ^
+      make -C $gopath"/src/src.elv.sh" get
     )
     if $build-ok {
       if (not $silent) {
