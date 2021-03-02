@@ -54,7 +54,7 @@ fn last-modified {
   }
 }
 
-fn check-commit [&commit=(current-commit-or-tag) &verbose=$false]{
+fn check-commit [&commit=(current-commit-or-tag) &verbose=$false &ignore-ts=$false]{
   if (eq $commit unknown) {
     echo (styled "Your elvish does not report a version number in elvish -buildinfo" red)
   } else {
@@ -62,7 +62,7 @@ fn check-commit [&commit=(current-commit-or-tag) &verbose=$false]{
       compare = (
         curl -s -i --max-time $curl-timeout --suppress-connect-headers ^
         -H "Accept: application/vnd.github.v3+json" ^
-        -H "If-Modified-Since: "(last-modified) ^
+        (if (not $ignore-ts) { put -H "If-Modified-Since: "(last-modified) }) ^
         https://api.github.com/repos/elves/elvish/compare/$commit...master | slurp
       )
     )
@@ -114,7 +114,7 @@ fn build-HEAD [&silent=$false &force=$false]{
       return
     }
 
-    var new-commit = (or (set _ = ?($from-master[commits][-1][sha])) "master")
+    var new-commit = (or (set _ = ?(put $from-master[commits][-1][sha])) "master")
 
     if (not $silent) {
       echo (styled "Building and installing Elvish "$new-commit" using go get" yellow)
