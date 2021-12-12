@@ -31,13 +31,13 @@
 use re
 use str
 
-short-hash-length = 7
-update-message = 'Elvish Upgrade Available - update:build-HEAD'
-curl-timeout = 1
+var short-hash-length = 7
+var update-message = 'Elvish Upgrade Available - update:build-HEAD'
+var curl-timeout = 1
 
 fn current-commit-or-tag {
   # Get the tag and commit from the currently installed Elvish binary
-  tag commit = (re:find '^(.[^-]*?)(?:-dev\.(.*))?$' (elvish -buildinfo -json | from-json)[version])[groups][1 2][text]
+  var tag commit = (re:find '^(.[^-]*?)(?:-dev\.(.*))?$' (elvish -buildinfo -json | from-json)[version])[groups][1 2][text]
   if (not-eq $commit '') {
     put $commit
   } else {
@@ -46,7 +46,7 @@ fn current-commit-or-tag {
 }
 
 fn last-modified {
-  platform = (uname)
+  var platform = (uname)
   if (eq $platform "Darwin") {
     put (/bin/date -u -j -r (/usr/bin/stat -f%B (which elvish)) +"%a, %d %b %Y %H:%M:%S GMT")
   } elif (eq $platform "Linux") {
@@ -54,12 +54,12 @@ fn last-modified {
   }
 }
 
-fn check-commit [&commit=(current-commit-or-tag) &verbose=$false &ignore-ts=$false]{
+fn check-commit {|&commit=(current-commit-or-tag) &verbose=$false &ignore-ts=$false|
   if (eq $commit unknown) {
     echo (styled "Your elvish does not report a version number in elvish -buildinfo" red)
   } else {
-    error = ?(
-      compare = (
+    var error = ?(
+      var compare = (
         curl -s -i --max-time $curl-timeout --suppress-connect-headers ^
         -H "Accept: application/vnd.github.v3+json" ^
         (if (not $ignore-ts) { put -H "If-Modified-Since: "(last-modified) }) ^
@@ -72,11 +72,11 @@ fn check-commit [&commit=(current-commit-or-tag) &verbose=$false &ignore-ts=$fal
       if (re:match "^HTTP/(2|1.1) 304" $compare) {
         return
       }
-      headers raw-json = (re:split "\r\n\r\n" $compare)
-      json = (echo $raw-json | from-json)
-      total-commits = 0
+      var headers raw-json = (re:split "\r\n\r\n" $compare)
+      var json = (echo $raw-json | from-json)
+      var total-commits = 0
       if (and (has-key $json total_commits)) {
-        total-commits = $json[total_commits]
+        set total-commits = $json[total_commits]
       }
       if (> $total-commits 0) {
         echo (styled $update-message yellow)
@@ -90,11 +90,11 @@ fn check-commit [&commit=(current-commit-or-tag) &verbose=$false &ignore-ts=$fal
   }
 }
 
-fn async-check-commit [&commit=(current-commit-or-tag) &verbose=$false]{
+fn async-check-commit {|&commit=(current-commit-or-tag) &verbose=$false|
   check-commit &commit=$commit &verbose=$verbose &
 }
 
-fn build-HEAD [&silent=$false &force=$false]{
+fn build-HEAD {|&silent=$false &force=$false|
   var gopath = (go env GOPATH)
   if (re:match $gopath (which elvish)) {
     var commit = (current-commit-or-tag)

@@ -16,17 +16,17 @@ use str
 use github.com/muesli/elvish-libs/git
 
 ### Default Settings ###
-default-user = ""
-force-hostname = $false
-timestamp-format = "%r"
-prompt-path-length = 3
-prompt-lines = [
+var default-user = ""
+var force-hostname = $false
+var timestamp-format = "%r"
+var prompt-path-length = 3
+var prompt-lines = [
   [session-helper hostname path writeable git]
   [time user virtualenv background-jobs]
 ]
-rprompt-lines = []
+var rprompt-lines = []
 
-nerd-glyphs = [
+var nerd-glyphs = [
   &home= ''
   &separator= ''
   &dirseparator= ''
@@ -45,13 +45,13 @@ nerd-glyphs = [
   &git-dirty= ''
   &session-helper= ''
 ]
-glyphs = $nerd-glyphs
+var glyphs = $nerd-glyphs
 
 # Color numbers come from the 8 bit chart here:
 #   https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
 # Format:
 #   &segment-name= [$Text-Color $Background-Color]
-segment-colors = [
+var segment-colors = [
   &path= ['color231' 'color92']
   &hostname= ['color232' 'color51']
   &virtualenv= ['color226' 'color21']
@@ -71,26 +71,26 @@ segment-colors = [
 ]
 
 ### Private Theme Variables
-background = ""
-git-status = [&]
-session-helper-bg-color = (+ (% $pid 216) 16)
-session-helper-fg-color = 0
+var background = ""
+var git-status = [&]
+var session-helper-bg-color = (+ (% $pid 216) 16)
+var session-helper-fg-color = 0
 
 ### Private Theme Functions
 fn session-helper-color-picker {
   if (>= (% (- $session-helper-bg-color 16) 36) 18) {
-    session-helper-fg-color = 'color232'
+    set session-helper-fg-color = 'color232'
   } else {
-    session-helper-fg-color = 'color255'
+    set session-helper-fg-color = 'color255'
   }
 }
 
-fn build-segment [colors @chars]{
+fn build-segment {|colors @chars|
   if (not-eq $background '') {
     styled $glyphs[separator] $background bg-$colors[1]
   }
   styled " "(str:join '' $chars)" " $colors[0] bg-$colors[1]
-  background = $colors[1]
+  set background = $colors[1]
 }
 
 ### System Segments ###
@@ -126,11 +126,11 @@ fn segment-background-jobs {
 ### Path Segments & Helper Functions ###
 
 fn generate-path {
-  path = (re:replace '~' $glyphs[home] (tilde-abbr $pwd))
-  path = (re:replace '(\.?[^/'$glyphs[home]']{'$prompt-path-length'})[^/]*/' '$1/' $path)
-  directories = [(str:split / $path)]
+  var path = (re:replace '~' $glyphs[home] (tilde-abbr $pwd))
+  set path = (re:replace '(\.?[^/'$glyphs[home]']{'$prompt-path-length'})[^/]*/' '$1/' $path)
+  var directories = [(str:split / $path)]
   if (eq $directories[0] '') {
-    directories = $directories[1:]
+    set directories = $directories[1:]
   }
   put $directories[0]
 
@@ -152,7 +152,7 @@ fn segment-session-helper {
 
 fn segment-virtualenv {
   if (not-eq $E:VIRTUAL_ENV "") {
-    virtualenv = (re:replace '\/.*\/' ''  $E:VIRTUAL_ENV)
+    var virtualenv = (re:replace '\/.*\/' ''  $E:VIRTUAL_ENV)
   	build-segment $segment-colors[virtualenv] $glyphs[virtualenv] " " $virtualenv
 	}
 }
@@ -167,11 +167,11 @@ fn segment-git-name {
 
 fn segment-git-commit {
   if (eq $git-status[is-git-repo] $true) {
-    error = ?(commit-or-tag = (git describe --exact-match HEAD 2> /dev/null))
+    var error = ?(var commit-or-tag = (git describe --exact-match HEAD 2> /dev/null))
     if (not-eq $error $ok) {
-        error = ?(commit-or-tag = (git rev-parse --short HEAD 2> /dev/null))
+        set error = ?(set commit-or-tag = (git rev-parse --short HEAD 2> /dev/null))
         if (not-eq $error $ok) {
-          commit-or-tag = 'No Commits'
+          set commit-or-tag = 'No Commits'
         }
     }
     if (not-eq $commit-or-tag "") {
@@ -202,7 +202,7 @@ fn segment-git-untracked {
 }
 
 fn segment-git-staged {
-  staged-count = (+ $git-status[staged-modified-count staged-deleted-count staged-added-count renamed-count copied-count])
+  var staged-count = (+ $git-status[staged-modified-count staged-deleted-count staged-added-count renamed-count copied-count])
   if (> $staged-count 0) {
     build-segment $segment-colors[git-staged] ""$staged-count " " $glyphs[git-staged]
   }
@@ -228,7 +228,7 @@ fn end-prompt {
   styled $glyphs[separator] $background
 }
 
-segments = [
+var segments = [
   &session-helper= $segment-session-helper~
   &path= $segment-path~
   &user= $segment-user~
@@ -244,21 +244,21 @@ segments = [
 
 ### Prompt Building ###
 
-fn build-prompt [lines]{
+fn build-prompt {|lines|
   if (eq $lines []) {
     return
   }
 
-  first-line = $true
+  var first-line = $true
   for line $lines {
     if (bool $first-line) {
-      first-line = $false
+      set first-line = $false
     } else {
       styled $glyphs[separator] $background
       put "\n"
     }
 
-    background = ''
+    set background = ''
     for segment $line {
       $segments[$segment]
     }
@@ -268,7 +268,7 @@ fn build-prompt [lines]{
 }
 
 fn prompt {
-  git-status = (git:status &counts=$true)
+  set git-status = (git:status &counts=$true)
   build-prompt $prompt-lines
 }
 
@@ -278,8 +278,8 @@ fn rprompt {
 
 fn init {
   session-helper-color-picker
-  edit:prompt = $prompt~
-  edit:rprompt = $rprompt~
+  set edit:prompt = $prompt~
+  set edit:rprompt = $rprompt~
 }
 
 init
