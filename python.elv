@@ -15,24 +15,24 @@
 # Use:
 #   use github.com/iwoloschin/elvish-packages/python
 
-virtualenv-directory = $E:HOME/.virtualenvs
+var virtualenv-directory = $E:HOME/.virtualenvs
 
-fn activate [name]{
-  virtualenvs = [(ls $virtualenv-directory)]
+fn activate {|name|
+  var virtualenvs = [(ls $virtualenv-directory)]
 
-  error = ?(confirmed-name = (
-    each [virtualenv]{
+  var error = ?(var confirmed-name = (
+    each {|virtualenv|
       if (eq $name $virtualenv) { put $name }
     } $virtualenvs)
   )
 
   if (eq $name $confirmed-name) {
-    E:VIRTUAL_ENV = $virtualenv-directory/$name
-    E:_OLD_VIRTUAL_PATH = $E:PATH
-    E:PATH = $E:VIRTUAL_ENV/bin:$E:PATH
+    set E:VIRTUAL_ENV = $virtualenv-directory/$name
+    set E:_OLD_VIRTUAL_PATH = $E:PATH
+    set E:PATH = $E:VIRTUAL_ENV/bin:$E:PATH
 
     if (not-eq $E:PYTHONHOME "") {
-      E:_OLD_VIRTUAL_PYTHONHOME = $E:PYTHONHOME
+      set E:_OLD_VIRTUAL_PYTHONHOME = $E:PYTHONHOME
       del E:PYTHONHOME
     }
   } else {
@@ -40,18 +40,18 @@ fn activate [name]{
   }
 }
 
-edit:completion:arg-completer[python:activate] = [@args]{
+set edit:completion:arg-completer[python:activate] = {|@args|
   e:ls $virtualenv-directory
 }
 
 fn deactivate {
   if (not-eq $E:_OLD_VIRTUAL_PATH "") {
-    E:PATH = $E:_OLD_VIRTUAL_PATH
+    set E:PATH = $E:_OLD_VIRTUAL_PATH
     del E:_OLD_VIRTUAL_PATH
   }
 
   if (not-eq $E:_OLD_VIRTUAL_PYTHONHOME "") {
-    E:PYTHONHOME = $E:_OLD_VIRTUAL_PYTHONHOME
+    set E:PYTHONHOME = $E:_OLD_VIRTUAL_PYTHONHOME
     del E:_OLD_VIRTUAL_PYTHONHOME
   }
 
