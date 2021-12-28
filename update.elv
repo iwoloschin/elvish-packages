@@ -41,7 +41,7 @@ fn current-commit-or-tag {
   if (not-eq $commit '') {
     put $commit
   } else {
-    put $tag
+    put "v"$tag
   }
 }
 
