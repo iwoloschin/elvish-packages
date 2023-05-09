@@ -107,7 +107,7 @@ fn build-HEAD {|&silent=$false &force=$false|
       echo (styled "Unable to query github to determine number of commits since last tag" red)
     }
 
-    if (and (not $force) (not-eq $commit unknown) (== $from-master[total_commits] (float64 0))) {
+    if (and (not $force) (not-eq $commit unknown) (== $from-master[total_commits] (num 0))) {
       if (not $silent) {
         echo (styled "No changes, not rebuilding" yellow)
       }
